@@ -75,8 +75,8 @@ commutes.
 ## 3.2 Daily Usage Patterns
 
 <figure>
-<img
-src="Cyclistic_Case_Study_Report_files/figure-gfm/total-rides-by-day-plot-1.png"
+<img    
+src="README_files/figure-gfm/total-rides-by-day-plot-1.png"
 alt="Figure 1: Total Rides by Day of Week" />
 <figcaption aria-hidden="true">Figure 1: Total Rides by Day of
 Week</figcaption>
@@ -87,7 +87,7 @@ Week</figcaption>
 
 <figure>
 <img
-src="Cyclistic_Case_Study_Report_files/figure-gfm/avg-ride-length-by-day-plot-1.png"
+src="README_files/figure-gfm/avg-ride-length-by-day-plot-1.png"
 alt="Figure 2: Average Ride Length by Day of Week" />
 <figcaption aria-hidden="true">Figure 2: Average Ride Length by Day of
 Week</figcaption>
@@ -100,7 +100,7 @@ weekends**, reinforcing the leisure-activity trend.
 
 <figure>
 <img
-src="Cyclistic_Case_Study_Report_files/figure-gfm/total-rides-by-hour-plot-1.png"
+src="README_files/figure-gfm/total-rides-by-hour-plot-1.png"
 alt="Figure 3: Total Rides by Hour of Day" />
 <figcaption aria-hidden="true">Figure 3: Total Rides by Hour of
 Day</figcaption>
@@ -113,7 +113,7 @@ Day</figcaption>
 
 <figure>
 <img
-src="Cyclistic_Case_Study_Report_files/figure-gfm/avg-ride-length-by-hour-plot-1.png"
+src="README_files/figure-gfm/avg-ride-length-by-hour-plot-1.png"
 alt="Figure 4: Average Ride Length by Hour of Day" />
 <figcaption aria-hidden="true">Figure 4: Average Ride Length by Hour of
 Day</figcaption>
