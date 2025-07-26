@@ -1,7 +1,8 @@
 Cyclistic Bike Share Case Study: Understanding Rider Behavior for
 Membership Conversion
 ================
-Mayank
+Author : Mayank  
+
 July 26, 2025
 
 - [1 Introduction](#1-introduction)
