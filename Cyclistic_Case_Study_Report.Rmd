@@ -1,0 +1,170 @@
+---
+title: "Cyclistic Bike Share Case Study: Understanding Rider Behavior for Membership Conversion"
+author: "Mayank"
+date: "July 26, 2025"
+output:
+  github_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r data-processing-setup, include=FALSE}
+# Load libraries
+library(tidyverse)
+library(lubridate)
+library(scales)
+library(knitr)
+
+# Load cleaned data
+df_combined <- readRDS("data/processed/df_combined_cleaned.Rds")
+
+# Summary tables
+ride_length_summary <- df_combined %>%
+  group_by(member_casual) %>%
+  summarise(
+    mean_ride_length_mins = mean(ride_length),
+    median_ride_length_mins = median(ride_length),
+    .groups = 'drop'
+  )
+
+rides_by_day <- df_combined %>%
+  group_by(member_casual, day_of_week) %>%
+  summarise(number_of_rides = n(), .groups = 'drop')
+
+average_ride_length_by_day <- df_combined %>%
+  group_by(member_casual, day_of_week) %>%
+  summarise(mean_ride_length_mins = mean(ride_length), .groups = 'drop')
+
+# Add hour_of_day if missing
+if (!"hour_of_day" %in% names(df_combined)) {
+  df_combined <- df_combined %>%
+    mutate(hour_of_day = hour(started_at))
+}
+
+rides_by_hour <- df_combined %>%
+  group_by(member_casual, hour_of_day) %>%
+  summarise(number_of_rides = n(), .groups = 'drop')
+
+average_ride_length_by_hour <- df_combined %>%
+  group_by(member_casual, hour_of_day) %>%
+  summarise(mean_ride_length_mins = mean(ride_length), .groups = 'drop')
+```
+
+# Introduction
+
+## Business Task
+Cyclistic, a Chicago-based bike-share company, is focused on increasing its annual membership base, which is more profitable compared to casual ridership. This case study aims to understand **how casual riders and annual members use Cyclistic bikes differently**, enabling the marketing team to design targeted strategies to convert casual riders into members.
+
+## Objectives
+- Analyze historical trip data to uncover differences in riding behavior between casual and member riders.
+- Provide actionable insights supported by data and visualizations.
+- Deliver clear, evidence-based recommendations for increasing annual memberships.
+
+# Data Preparation
+
+## Data Sources
+- **Divvy Trips:** Historical trip data for 2019 Q1 and 2020 Q1, sourced from [Kaggle](https://www.kaggle.com/datasets/edgarcovantesosuna/divvy-trips-2019-q1-q4-2020-q1).
+- Data is publicly available under the Motivate International Inc. license and suitable for analysis.
+
+## Data Cleaning and Transformation
+Key steps:
+- Standardized column names and categorical values for consistency.
+- Converted timestamps to datetime objects and calculated **ride length (minutes)**.
+- Extracted **day of the week** and **hour of the day** for usage pattern analysis.
+- Removed rides with missing data and filtered out invalid ride durations (>24 hours or ≤0 minutes).
+- Merged all cleaned datasets into a single `df_combined` dataframe.
+
+# Findings and Analysis
+
+## Ride Duration Summary
+
+```{r ride-length-summary-table, echo=FALSE}
+ride_length_table <- ride_length_summary %>%
+  mutate(
+    member_casual = str_to_title(member_casual),
+    mean_ride_length_mins = round(mean_ride_length_mins, 2),
+    median_ride_length_mins = round(median_ride_length_mins, 2)
+  )
+knitr::kable(
+  ride_length_table,
+  col.names = c("Rider Type", "Mean Ride Length (Minutes)", "Median Ride Length (Minutes)"),
+  caption = "Table 1: Summary of Ride Length by Rider Type"
+)
+```
+
+Casual riders take significantly longer trips on average compared to members. This suggests they primarily use Cyclistic bikes for leisure and exploration, while members rely on them for shorter, frequent commutes.
+
+## Daily Usage Patterns
+
+```{r total-rides-by-day-plot, echo=FALSE, fig.width=10, fig.height=6, fig.cap="Figure 1: Total Rides by Day of Week"}
+rides_by_day_plot <- ggplot(rides_by_day, aes(x = day_of_week, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "Total Rides by Day of Week", x = "Day of Week", y = "Number of Rides", fill = "User Type") +
+  scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~ member_casual, scales = "free_y") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+print(rides_by_day_plot)
+```
+
+- **Casual riders:** Usage peaks on weekends, indicating leisure trips.
+- **Members:** Higher weekday usage, aligning with commuting patterns.
+
+```{r avg-ride-length-by-day-plot, echo=FALSE, fig.width=10, fig.height=6, fig.cap="Figure 2: Average Ride Length by Day of Week"}
+avg_ride_length_by_day_plot <- ggplot(average_ride_length_by_day, aes(x = day_of_week, y = mean_ride_length_mins, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  labs(title = "Average Ride Length by Day of Week", x = "Day of Week", y = "Average Ride Length (Minutes)", fill = "User Type") +
+  facet_wrap(~ member_casual) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+print(avg_ride_length_by_day_plot)
+```
+
+Casual riders’ rides are not only longer overall but **longest on weekends**, reinforcing the leisure-activity trend.
+
+## Hourly Usage Patterns
+
+```{r total-rides-by-hour-plot, echo=FALSE, fig.width=10, fig.height=7, fig.cap="Figure 3: Total Rides by Hour of Day"}
+rides_by_hour_plot <- ggplot(rides_by_hour, aes(x = hour_of_day, y = number_of_rides, color = member_casual)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(title = "Total Rides by Hour of Day", x = "Hour of Day (0-23)", y = "Number of Rides", color = "User Type") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = seq(0, 23, by = 2)) +
+  facet_wrap(~ member_casual, ncol = 1, scales = "free_y") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+print(rides_by_hour_plot)
+```
+
+- **Casual riders:** Afternoon peak (1 PM–5 PM), consistent with recreational use.
+- **Members:** Clear bimodal peaks during commute hours (7–9 AM and 4–6 PM).
+
+```{r avg-ride-length-by-hour-plot, echo=FALSE, fig.width=10, fig.height=7, fig.cap="Figure 4: Average Ride Length by Hour of Day"}
+avg_ride_length_by_hour_plot <- ggplot(average_ride_length_by_hour, aes(x = hour_of_day, y = mean_ride_length_mins, color = member_casual)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 2) +
+  labs(title = "Average Ride Length by Hour of Day", x = "Hour of Day (0-23)", y = "Average Ride Length (Minutes)", color = "User Type") +
+  scale_x_continuous(breaks = seq(0, 23, by = 2)) +
+  facet_wrap(~ member_casual, ncol = 1, scales = "free_y") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+print(avg_ride_length_by_hour_plot)
+```
+
+Casual riders maintain longer trip durations throughout the day, whereas members keep a consistent, shorter ride length.
+
+# Recommendations
+
+1. **Target Leisure-Oriented Riders:** Focus campaigns on weekends and afternoons; highlight the convenience and value of membership for extended leisure trips.
+2. **Communicate Cost Savings:** Use visuals to illustrate how frequent long rides make memberships more cost-effective than casual rates.
+3. **Improve Accessibility in High-Demand Areas:** Ensure availability at popular weekend destinations; partner with tourist attractions and event organizers.
+
+# Conclusion
+
+Cyclistic can significantly increase annual memberships by tailoring its marketing strategy to casual riders' behavior. Casual users are primarily leisure-focused, taking longer weekend and afternoon rides, while members rely on Cyclistic for short, routine commutes. By aligning marketing efforts with these insights, Cyclistic can convert more casual riders into committed members.
